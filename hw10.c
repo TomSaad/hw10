@@ -14,9 +14,10 @@ void Set_Pulsewidth(void);
 void PCA_ISR ( void ) __interrupt 9;
 
 void readUSRanger(void);
-unsigned char readSoftwareRev(unsigned char * Data);
+unsigned char readSoftwareRev(unsigned char * Data, unsigned char softrev);
 unsigned int readCmRange(unsigned char * Data, unsigned int range);
-void startPing (unsigned char * Data);
+void startPing(unsigned char * Data);
+void readCompass(void);
 
 //-----------------------------------------------------------------------------
 // Global Variables
@@ -48,7 +49,7 @@ void main(void)
         {
             readUSRanger();
 			readCompass();
-        }
+		}
     }
 }
 
@@ -154,14 +155,15 @@ void readUSRanger ( void )
     unsigned int range = 0;
     unsigned char softrev = 0;
 
-    softrev = readSoftwareRev(Data);
+    softrev = readSoftwareRev(Data, softrev);
+    printf("Software Revision: %u\r\n", softrev);
 
     range = readCmRange(Data, range); //read range
     printf("Distance: %u cm \r\n", range); //print range
 
     startPing(Data);
     //write 0x81 to ranger (location: 0xE0) to get ranging mode in cm
-    r_ct = 0; //set r_ct = 0 (80 ms flag)
+    //r_ct = 0; //set r_ct = 0 (80 ms flag)
 }
 
 //-----------------------------------------------------------------------------
@@ -170,10 +172,10 @@ void readUSRanger ( void )
 //
 // Read the ultrasound ranger distance
 //
-unsigned char readSoftwareRev ( unsigned char * Data )
+unsigned char readSoftwareRev ( unsigned char * Data, unsigned char softrev )
 {
-    i2c_read_data ( _ranger_addr, 4, Data, 1 );
-    //read from addr, register 4, put in Data, 1 bytes
+    i2c_read_data ( _ranger_addr, 0, Data, 1 );
+    //read from addr, register 0, put in Data, 1 bytes
     softrev = Data[0];
     return softrev;
 }
@@ -218,4 +220,5 @@ void readCompass ( void )
 	i2c_read_data(0xC0, 12, Data, 2);
 	combined = (((unsigned int)Data[0] << 8) | Data[1]);
 	printf("Registers 12 and 13 of compass make: %d\r\n", combined);
+	r_ct = 0;
 }
