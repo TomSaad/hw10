@@ -47,6 +47,7 @@ void main(void)
         if (r_ct >= 4)
         {
             readUSRanger();
+			readCompass();
         }
     }
 }
@@ -204,4 +205,17 @@ void startPing ( unsigned char * Data )
     Data[0] = _ping_cm;
     i2c_write_data ( _ranger_addr, 0, Data, 1 );
     //write to addr, register 0, put in Data, 1 bytes
+}
+
+void readCompass ( void )
+{
+	unsigned char Data[2];
+	unsigned int combined;
+	
+	i2c_read_data(0xC0, 0, Data, 1);	//Reads the 0 register of the compass
+	printf("Electronic Compass software version: %d\r\n", Data[0]);
+	
+	i2c_read_data(0xC0, 12, Data, 2);
+	combined = (((unsigned int)Data[0] << 8) | Data[1]);
+	printf("Registers 12 and 13 of compass make: %d\r\n", combined);
 }
